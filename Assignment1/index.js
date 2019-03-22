@@ -1,19 +1,25 @@
 const http = require('http');
 const config = require('./config');
 const url = require('url');
-const fs = require('fs');
 
 const httpServer = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const path = parsedUrl.pathname;
     const trimmedPath = path.replace(/^\/+|\/+$/g, '');
+    const method = req.method.toLowerCase();
+    
+    const data = {};
 
-    const chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
+    if (method == 'post' && trimmedPath == 'hello') {
+        data.message = "Hello, world!";
+    };
 
-    chosenHandler((statusCode) => {
+    const chosenHandler = router[trimmedPath] || handlers.notFound;
+    
+    chosenHandler(data, (statusCode) => {
         res.setHeader('Content-Type', 'application/json');
         res.writeHead(statusCode);
-        res.end("Hello, world!");
+        res.end(JSON.stringify(data));
     });
 });
 
@@ -23,11 +29,11 @@ httpServer.listen(config.httpPort, () => {
 
 const handlers = {};
 
-handlers.notFound = (callback) => {
+handlers.notFound = (data, callback) => {
     callback(404);
 };
 
-handlers.hello = (callback) => {
+handlers.hello = (data, callback) => {
     callback(200);
 };
 
